@@ -4,8 +4,6 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    margin: 0;
 }
 
 .container {
@@ -102,3 +100,12 @@ h2, h3 {
     border: none;
     cursor: pointer;
 }
+
+.small-checkbox {
+    width: 16px;
+    height: 16px;
+    margin-right: 10px; /* Adjust as needed to reduce space */
+    transform: scale(0.8); /* Further reduce size */
+    vertical-align: middle;
+}
+

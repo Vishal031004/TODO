@@ -1,114 +1,122 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid'; 
 import './toDo.css';
 
+function Todo() {
+    const [todo, setTodo] = useState([]);
+    const [newTodo, setNewTodo] = useState("");
+    const [newTodoDesc, setNewTodoDesc] = useState(""); 
+    const [newTodoDate, setNewTodoDate] = useState(""); 
+    const [completed, setCompleted] = useState(0); 
+    const [editingId, setEditingId] = useState(null);
 
-export default Todo
-
-function Todo(){
-    //state to re render the list of the todos initially its just an object with one element and that element has an id and a value
-    let [todo,setTodo]=useState([{task:"sample-task",id:uuidv4(),isDone:false}])
-    //this state variable is used to take the input from the input box and add it to the array of objects
-    let [newTodo,setNewTodo]=useState("")
-
-    let addTask = () =>{
-        // setTodo([...todo,{task:newTodo,id:uuidv4()}]);
-        setTodo((prevTodo)=>{
-            return [...prevTodo,{task:newTodo,id:uuidv4(),isDone:false}]
-        })
-        setNewTodo("")
-    }
-
-    let updateNewTodoValue = (event) =>{
-        setNewTodo(event.target.value)  
-    }
-
-    let deleteTodo = (id) =>{
-        setTodo(todo.filter((todo)=> todo.id!=id));
-    }
-
-    let upperCaseAll =()=>{
-        setTodo((prevTasks) =>
-        prevTasks.map((todo) =>{
-            return{
-                ...todo,
-                task:todo.task.toUpperCase(),
+    const addTask = () => {
+        if (newTodo && newTodoDesc && newTodoDate) {
+            if (editingId) {
+                setTodo(prevTodo =>
+                    prevTodo.map(todo => 
+                        todo.id === editingId
+                            ? { ...todo, task: newTodo, description: newTodoDesc, date: newTodoDate }
+                            : todo
+                    )
+                );
+                setEditingId(null);
+            } else {
+                setTodo(prevTodo => [
+                    ...prevTodo,
+                    { task: newTodo, description: newTodoDesc, date: newTodoDate, id: uuidv4(), isDone: false }
+                ]);
             }
-        }))
-    }
+            setNewTodo("");
+            setNewTodoDesc("");
+            setNewTodoDate("");
+        }
+    };
 
-    let upperCaseOne =(id)=>{
-        setTodo((prevTasks) =>
-        prevTasks.map((todo) =>{
-            if(todo.id==id){
-                return{
-                    ...todo,
-                    task:todo.task.toUpperCase(),
+    const deleteTodo = (id) => {
+        setTodo(prevTodo => {
+            return prevTodo.filter(todo => todo.id !== id);
+        });
+    };
+
+    const deleteAllTodo = () => {
+        setTodo([]);
+    };
+
+    const edit = (id) => {
+        const taskToEdit = todo.find(todo => todo.id === id);
+        if (taskToEdit) {
+            setNewTodo(taskToEdit.task);
+            setNewTodoDesc(taskToEdit.description);
+            setNewTodoDate(taskToEdit.date);
+            setEditingId(id);
+        }
+    };
+
+    const markAllDone = () => {
+        setTodo(prevTasks => prevTasks.map(todo => ({ ...todo, isDone: true })));
+    };
+
+    const handleCheckboxChange = (id) => {
+        setTodo(prevTasks => 
+            prevTasks.map(todo => {
+                if (todo.id === id) {
+                    const newIsDone = !todo.isDone;
+                    return { ...todo, isDone: newIsDone };
                 }
-            }
-            else{
-                return todo
-            }
-            
-        }))
-    }
+                return todo;
+            })
+        );
+    };
 
-    let markAllDone =()=>{
-        setTodo((prevTasks) =>
-        prevTasks.map((todo) =>{
-            return{
-                ...todo,
-                isDone:true
-            }
-        }))
-    }
+    // Update the completed count whenever the todo list changes
+    useEffect(() => {
+        const completedTasks = todo.filter(task => task.isDone).length;
+        setCompleted(completedTasks);
+    }, [todo]); // This effect runs whenever the 'todo' list is updated
 
-    let markAsDone =(id)=>{
-        setTodo((prevTasks) =>
-        prevTasks.map((todo) =>{
-           
-            if(todo.id==id){
-                return{
-                    ...todo,
-                    isDone:true,
-                }
-            }
-            else{
-                return todo
-            }
-            
-        }))
-    }
-
-    return(
+    return (
         <div>
-            <h2 style={{color:"white"}}>YOUR TODO LIST</h2>
+            <h2 style={{ color: "white" }}>YOUR TODO LIST</h2>
             <div className='inputContainer'>
-                <input placeholder="Add new task" value={newTodo} onChange={updateNewTodoValue}></input>
-                    &nbsp;&nbsp;&nbsp;
-                <button onClick={addTask} style={{color:"orange"}}>Add</button>
+                <input placeholder="Task Name" value={newTodo} onChange={(e) => setNewTodo(e.target.value)} />
+                <input placeholder="Task Description" value={newTodoDesc} onChange={(e) => setNewTodoDesc(e.target.value)} />
+                <input type="date" value={newTodoDate} onChange={(e) => setNewTodoDate(e.target.value)} />
+                <button onClick={addTask} style={{ color: "orange" }}>
+                    {editingId ? "Update Task" : "Add Task"}
+                </button>
             </div>
-            <br/>
-            <h3 style={{color:"white"}}>TODO TASKS</h3>
+            <br />
+            <h3 style={{ color: "white" }}>TODO TASKS</h3>
             <ul>
-                {todo.map((x)=>(
+                {todo.map((x) => (
                     <li key={x.id}>
-                      <span style={x.isDone ? {textDecoration:"line-through"}:{}} > {x.task}</span> &nbsp;&nbsp;&nbsp;
-                      <button style={{color:"red"}} onClick={() => deleteTodo(x.id)}>Delete</button>&nbsp;&nbsp;&nbsp;
-                      <button style={{color:"green"}} onClick={() => upperCaseOne(x.id)}>Make Uppercase</button>
-                      &nbsp;&nbsp;&nbsp;
-                      <button style={{color:"yellow "}} onClick={() => markAsDone(x.id)}>Mark as done</button>
+                        <span style={x.isDone ? { textDecoration: "line-through", color: "red" } : {}} >
+                            <b>{x.task}</b> <br /> {x.description} <br /> {x.date} <br/>
+                            {x.isDone ? <p>Status: Completed</p> : <p>Status: Scheduled</p>}
+                        </span>
+                        <input 
+                              type="checkbox" 
+                               className="small-checkbox"
+                                  checked={x.isDone} 
+                                 onChange={() => handleCheckboxChange(x.id)}
+                        />
+                        &nbsp;&nbsp;&nbsp;
+                        <button style={{ color: "red" }} onClick={() => deleteTodo(x.id)}>Delete</button>
+                        &nbsp;&nbsp;&nbsp;
+                        <button style={{ color: "green" }} onClick={() => edit(x.id)}>Edit</button>
                     </li>
-                
                 ))}
             </ul>
-            <br/>
+            <br />
             <div className='allApplier'>
-                <button style={{color:"blue"}} onClick={upperCaseAll}>Change to uppercase</button>
-                    &nbsp;&nbsp;&nbsp;
-                <button style={{color:"purple"}} onClick={markAllDone}>Mark all as done</button>
+                <button style={{ color: "blue" }} onClick={deleteAllTodo}>Delete All</button>
+                &nbsp;&nbsp;&nbsp;
+                <button style={{ color: "purple" }} onClick={markAllDone}>Mark all as done</button>
             </div>
-
-        </div>  
-    )
+            <h3>Completed: {completed}</h3>
+        </div>
+    );
 }
+
+export default Todo;
